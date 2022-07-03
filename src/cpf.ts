@@ -1,61 +1,42 @@
-// @ts-nocheck
-export function validate (str) {
+const FIRST_VERIFICATION_DIGIT = 10;
+const SECOND_VERIFICATION_DIGIT = 11;
 
-	if (str !== null) {
-        if (str !== undefined) {
-            if (str.length >= 11 || str.length <= 14){
+export function validate(str: string | null | undefined) {
 
-                str=str
-                    .replace('.','')
-                    .replace('.','')
-                    .replace('-','')
-                    .replace(" ","");  
-    
-                if (!str.split("").every(c => c === str[0])) {
-                    try{  
-                        let     d1, d2;  
-                        let     dg1, dg2, rest;  
-                        let     digito;  
-                            let     nDigResult;  
-                        d1 = d2 = 0;  
-                        dg1 = dg2 = rest = 0;  
-                            
-                        for (let nCount = 1; nCount < str.length -1; nCount++) {  
-                            // if (isNaN(parseInt(str.substring(nCount -1, nCount)))) {
-                            // 	return false;
-                            // } else {
-    
-                                digito = parseInt(str.substring(nCount -1, nCount));  							
-                                d1 = d1 + ( 11 - nCount ) * digito;  
-                
-                                d2 = d2 + ( 12 - nCount ) * digito;  
-                            // }
-                        };  
-                            
-                        rest = (d1 % 11);  
-                
-                        dg1 = (rest < 2) ? dg1 = 0 : 11 - rest;  
-                        d2 += 2 * dg1;  
-                        rest = (d2 % 11);  
-                        if (rest < 2)  
-                            dg2 = 0;  
-                        else  
-                            dg2 = 11 - rest;  
-                
-                            let nDigVerific = str.substring(str.length-2, str.length);  
-                        nDigResult = "" + dg1 + "" + dg2;  
-                        return nDigVerific == nDigResult;
-                    }catch (e){  
-                        console.error("Erro !"+e);  
-    
-                        return false;  
-                    }  
-                } else return false
-    
-            }else return false;
-        }
+    if (!str) return false;
 
+    const cpf = removePunctuation(str);
+    if (isInvalidLength(cpf)) return false;
+    if (isIdenticalDigits(cpf)) return false;
+    const verificationDigit1 = calculateDigit(cpf, FIRST_VERIFICATION_DIGIT);
+    const verificationDigit2 = calculateDigit(cpf, SECOND_VERIFICATION_DIGIT);
+    let checkDigit = extractCheckDigit(cpf);
+    const calculatedCheckDigit = `${verificationDigit1}${verificationDigit2}`;
+    return checkDigit === calculatedCheckDigit;
+}
 
-	} else return false;
+function removePunctuation(str: string) {
+    return str.replace(/\D/g, "");
+}
 
+function isInvalidLength(str: string) {
+    return str.length !== 11;
+}
+
+function isIdenticalDigits(cpf: string) {
+    const [firstDigit] = cpf;
+    return [...cpf].every(digit => digit === firstDigit);
+}
+
+function calculateDigit(cpf: string, factor: number) {
+    const total = [...cpf].reduce((total, digit) => {
+        if (factor > 1) total += parseInt(digit) * factor--;
+        return total;
+    }, 0);
+    const rest = total % 11;
+    return (rest < 2) ? 0 : 11 - rest;
+}
+
+function extractCheckDigit(cpf: string) {
+    return cpf.slice(-2);
 }
